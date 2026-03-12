@@ -1,0 +1,11 @@
+export const PHOTO_URL = '../assets/car-photo.jpg';
+export const WORLD_SIZE = 2600;
+export const HALF_WORLD = WORLD_SIZE / 2;
+export const BLOCK = 120;
+export const ROAD_WIDTH = 34;
+export const ROAD_HALF = ROAD_WIDTH / 2;
+export const GRID_MIN = -8;
+export const GRID_MAX = 8;
+export const ROAD_POSITIONS = Array.from({ length: GRID_MAX - GRID_MIN + 1 }, (_, i) => (GRID_MIN + i) * BLOCK);
+export const MINIMAP_RADIUS = 260;
+export const MAX_POLICE_HITS = 20;
