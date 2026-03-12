@@ -70,9 +70,8 @@
   </div>
   <div id="centerMsg">BOOST!</div>
 
-  <script type="module">
-    import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
-
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
     const loading = document.getElementById("loading");
     const speedEl = document.getElementById("speed");
     const lapEl = document.getElementById("lap");
@@ -95,7 +94,6 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
-    // Lights
     const hemi = new THREE.HemisphereLight(0xffffff, 0x5a7d3a, 1.1);
     scene.add(hemi);
 
@@ -109,7 +107,6 @@
     sun.shadow.camera.bottom = -140;
     scene.add(sun);
 
-    // Ground
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(1200, 1200),
       new THREE.MeshStandardMaterial({ color: 0x3e8f3e })
@@ -118,7 +115,6 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Decorative distant terrain lumps
     for (let i = 0; i < 120; i++) {
       const hill = new THREE.Mesh(
         new THREE.SphereGeometry(3 + Math.random() * 8, 16, 16),
@@ -133,7 +129,6 @@
       scene.add(hill);
     }
 
-    // Sky decor
     for (let i = 0; i < 24; i++) {
       const cloud = new THREE.Group();
       for (let j = 0; j < 4; j++) {
@@ -152,7 +147,6 @@
       scene.add(cloud);
     }
 
-    // Track
     const trackRadiusX = 70;
     const trackRadiusZ = 42;
     const roadWidth = 18;
@@ -181,7 +175,7 @@
     function getTrackTangent(t) {
       const a = t * Math.PI * 2;
       const tx = -Math.sin(a) * trackRadiusX;
-      const tz =  Math.cos(a) * trackRadiusZ;
+      const tz = Math.cos(a) * trackRadiusZ;
       return new THREE.Vector3(tx, 0, tz).normalize();
     }
 
@@ -205,7 +199,6 @@
       road.castShadow = true;
       scene.add(road);
 
-      // Lane stripes
       if (i % 4 === 0) {
         const stripe = new THREE.Mesh(
           new THREE.BoxGeometry(0.6, 0.05, 3.5),
@@ -217,7 +210,6 @@
         scene.add(stripe);
       }
 
-      // Barriers
       for (const sign of [-1, 1]) {
         const barrier = new THREE.Mesh(
           new THREE.BoxGeometry(0.6, 1.4, len),
@@ -232,7 +224,6 @@
       }
     }
 
-    // Start/finish line
     const finishLine = new THREE.Mesh(
       new THREE.BoxGeometry(roadWidth - 1.2, 0.08, 2.5),
       new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x333333 })
@@ -242,7 +233,6 @@
     finishLine.rotation.y = Math.PI / 2;
     scene.add(finishLine);
 
-    // Checkered pattern squares
     for (let x = -6; x <= 6; x++) {
       for (let z = -1; z <= 1; z++) {
         if ((x + z) % 2 === 0) {
@@ -258,7 +248,6 @@
       }
     }
 
-    // Ramps / jumps
     const ramps = [];
     const rampTs = [0.16, 0.39, 0.66, 0.87];
     for (const t of rampTs) {
@@ -278,13 +267,9 @@
       ramp.receiveShadow = true;
       scene.add(ramp);
 
-      ramps.push({
-        mesh: ramp,
-        pos: ramp.position.clone()
-      });
+      ramps.push({ mesh: ramp });
     }
 
-    // Boost pads
     const boosts = [];
     const boostTs = [0.09, 0.26, 0.49, 0.74];
     for (const t of boostTs) {
@@ -304,17 +289,12 @@
       boost.position.copy(pos);
       boost.position.y = 0.12;
       boost.rotation.y = angle;
-      boost.castShadow = false;
       boost.receiveShadow = true;
       scene.add(boost);
 
-      boosts.push({
-        mesh: boost,
-        cooldown: 0
-      });
+      boosts.push({ mesh: boost, cooldown: 0 });
     }
 
-    // Trees
     for (let i = 0; i < 160; i++) {
       const angle = Math.random() * Math.PI * 2;
       const dist = 58 + Math.random() * 120;
@@ -331,19 +311,15 @@
       );
       trunk.position.set(x, 2, z);
       leaves.position.set(x, 6, z);
-      trunk.castShadow = leaves.castShadow = true;
-      trunk.receiveShadow = leaves.receiveShadow = true;
+      trunk.castShadow = true;
+      leaves.castShadow = true;
+      trunk.receiveShadow = true;
+      leaves.receiveShadow = true;
       scene.add(trunk, leaves);
     }
 
-    // Car
     const car = new THREE.Group();
     scene.add(car);
-
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.setCrossOrigin("anonymous");
-
-    const carImageUrl = "https://iili.io/qaxWCzX.jpg";
 
     const fallbackMat = new THREE.MeshStandardMaterial({
       color: 0xdddddd,
@@ -351,34 +327,9 @@
       roughness: 0.55
     });
 
-    const carTexture = await new Promise((resolve) => {
-      textureLoader.load(
-        carImageUrl,
-        tex => {
-          tex.colorSpace = THREE.SRGBColorSpace;
-          tex.wrapS = THREE.ClampToEdgeWrapping;
-          tex.wrapT = THREE.ClampToEdgeWrapping;
-          resolve(tex);
-        },
-        undefined,
-        () => resolve(null)
-      );
-    });
-
-    const bodyMaterials = carTexture
-      ? [
-          new THREE.MeshStandardMaterial({ map: carTexture, metalness: 0.35, roughness: 0.55 }),
-          new THREE.MeshStandardMaterial({ map: carTexture, metalness: 0.35, roughness: 0.55 }),
-          new THREE.MeshStandardMaterial({ map: carTexture, metalness: 0.35, roughness: 0.55 }),
-          new THREE.MeshStandardMaterial({ map: carTexture, metalness: 0.35, roughness: 0.55 }),
-          new THREE.MeshStandardMaterial({ map: carTexture, metalness: 0.35, roughness: 0.55 }),
-          new THREE.MeshStandardMaterial({ map: carTexture, metalness: 0.35, roughness: 0.55 })
-        ]
-      : [fallbackMat, fallbackMat, fallbackMat, fallbackMat, fallbackMat, fallbackMat];
-
     const body = new THREE.Mesh(
       new THREE.BoxGeometry(3.2, 1.1, 6.2),
-      bodyMaterials
+      [fallbackMat, fallbackMat, fallbackMat, fallbackMat, fallbackMat, fallbackMat]
     );
     body.position.y = 1.15;
     body.castShadow = true;
@@ -417,7 +368,6 @@
       wheels.push(wheel);
     });
 
-    // Car shadow pad
     const shadowPad = new THREE.Mesh(
       new THREE.CircleGeometry(3.1, 24),
       new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18 })
@@ -426,7 +376,30 @@
     shadowPad.position.y = 0.03;
     car.add(shadowPad);
 
-    // Car physics/state
+    const carImageUrl = "https://iili.io/qaxWCzX.jpg";
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.crossOrigin = "anonymous";
+
+    textureLoader.load(
+      carImageUrl,
+      function(tex) {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const mats = [];
+        for (let i = 0; i < 6; i++) {
+          mats.push(new THREE.MeshStandardMaterial({
+            map: tex,
+            metalness: 0.35,
+            roughness: 0.55
+          }));
+        }
+        body.material = mats;
+      },
+      undefined,
+      function() {
+        console.log("Car image failed to load, using fallback color.");
+      }
+    );
+
     const keys = {};
     let speed = 0;
     let verticalVel = 0;
@@ -438,7 +411,6 @@
 
     const carState = {
       pos: new THREE.Vector3(trackRadiusX, 0.4, 0),
-      vel: new THREE.Vector3(),
       reset() {
         this.pos.set(trackRadiusX, 0.4, 0);
         speed = 0;
@@ -447,6 +419,7 @@
         yaw = Math.PI / 2;
         car.rotation.set(0, yaw, 0);
         car.position.copy(this.pos);
+        car.position.y = 0.4;
       }
     };
     carState.reset();
@@ -460,10 +433,11 @@
       }, 900);
     }
 
-    function nearestTrackData(pos) {
+    function getNearestTrackData(pos) {
       let bestT = 0;
       let bestDist = Infinity;
       const samples = 360;
+
       for (let i = 0; i < samples; i++) {
         const t = i / samples;
         const p = getTrackPoint(t);
@@ -473,22 +447,26 @@
           bestT = t;
         }
       }
+
       const center = getTrackPoint(bestT);
       const tangent = getTrackTangent(bestT);
       const side = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
       const offset = new THREE.Vector3().subVectors(pos, center);
       const lateral = offset.dot(side);
-      return { t: bestT, center, tangent, side, lateral, distSq: bestDist };
+
+      return { t: bestT, center, tangent, side, lateral };
     }
 
     function clampToTrack() {
-      const data = nearestTrackData(carState.pos);
+      const data = getNearestTrackData(carState.pos);
       const maxSide = roadWidth / 2 - 1.2;
+
       if (Math.abs(data.lateral) > maxSide) {
         const correction = Math.sign(data.lateral) * (Math.abs(data.lateral) - maxSide);
         carState.pos.add(data.side.clone().multiplyScalar(-correction));
         speed *= 0.93;
       }
+
       return data;
     }
 
@@ -525,14 +503,14 @@
       prevLapT = trackT;
     }
 
-    window.addEventListener("keydown", e => {
+    window.addEventListener("keydown", function(e) {
       keys[e.key.toLowerCase()] = true;
       if (e.key.toLowerCase() === "r") {
         carState.reset();
       }
     });
 
-    window.addEventListener("keyup", e => {
+    window.addEventListener("keyup", function(e) {
       keys[e.key.toLowerCase()] = false;
     });
 
@@ -540,36 +518,30 @@
 
     function animate() {
       requestAnimationFrame(animate);
+
       const dt = Math.min(clock.getDelta(), 0.03);
 
-      // Inputs
       const forward = keys["w"] || keys["arrowup"];
       const backward = keys["s"] || keys["arrowdown"];
       const left = keys["a"] || keys["arrowleft"];
       const right = keys["d"] || keys["arrowright"];
       const handbrake = keys[" "];
 
-      // Acceleration / braking
       if (forward) speed += 0.28 * dt * 3.2;
       if (backward) speed -= 0.25 * dt * 3.2;
 
-      // Friction
       speed *= grounded ? 0.992 : 0.997;
       if (handbrake) speed *= 0.975;
 
-      // Clamp speed
       speed = Math.max(-0.18, Math.min(0.72, speed));
 
-      // Steering
       const steerPower = grounded ? (0.032 + Math.min(Math.abs(speed) * 0.04, 0.05)) : 0.01;
       if (left) yaw += steerPower * (speed >= 0 ? 1 : -1);
       if (right) yaw -= steerPower * (speed >= 0 ? 1 : -1);
 
-      // Move forward in facing direction
       const forwardVec = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
       carState.pos.addScaledVector(forwardVec, speed * 1.7);
 
-      // Gravity / jump
       if (!grounded) {
         verticalVel -= 0.018;
         car.position.y += verticalVel * 5.2;
@@ -582,48 +554,39 @@
         car.position.y = 0.4;
       }
 
-      // Ramp and boost logic
       checkRamps();
       checkBoosts();
 
-      // Track correction
       const trackData = clampToTrack();
       updateLap(trackData.t);
 
-      // Extra off-road slowdown
       const offRoadAmount = Math.max(0, Math.abs(trackData.lateral) - (roadWidth / 2 - 3));
       if (offRoadAmount > 0) speed *= 0.965;
 
-      // Cooldowns
       for (const b of boosts) {
         if (b.cooldown > 0) b.cooldown--;
         b.mesh.material.emissiveIntensity = b.cooldown > 0 ? 0.25 : 1.4;
       }
 
-      // Apply car transform
       car.position.x = carState.pos.x;
       car.position.z = carState.pos.z;
       car.rotation.y = yaw;
 
-      // Car lean / pitch
       const targetRoll = (left ? -0.08 : 0) + (right ? 0.08 : 0);
       car.rotation.z += (targetRoll - car.rotation.z) * 0.08;
+
       const targetPitch = grounded ? -speed * 0.12 : -0.18;
       car.rotation.x += (targetPitch - car.rotation.x) * 0.08;
 
-      // Wheel spin
       for (const wheel of wheels) {
         wheel.rotation.x -= speed * 0.65;
       }
 
-      // Camera chase
       const camBack = new THREE.Vector3(Math.sin(yaw), 0.22, Math.cos(yaw)).multiplyScalar(-16);
       const camPos = car.position.clone().add(camBack).add(new THREE.Vector3(0, 7.5, 0));
       camera.position.lerp(camPos, 0.08);
-      const lookAt = car.position.clone().add(new THREE.Vector3(0, 2.2, 0));
-      camera.lookAt(lookAt);
+      camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 2.2, 0)));
 
-      // HUD
       speedEl.textContent = Math.round(Math.abs(speed) * 230);
       lapEl.textContent = lap;
       boostsEl.textContent = boostsHit;
@@ -631,7 +594,7 @@
       renderer.render(scene, camera);
     }
 
-    window.addEventListener("resize", () => {
+    window.addEventListener("resize", function() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
